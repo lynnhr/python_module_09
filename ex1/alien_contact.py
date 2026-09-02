@@ -55,7 +55,6 @@ def display_contact(contact: AlienContact) -> None:
     print(f"Witnesses: {contact.witness_count}")
     if contact.message_received is not None:
         print(f"Message: '{contact.message_received}'")
-    print(f"Verified: {contact.is_verified}")
 
 
 def show_errors(error: ValidationError) -> None:
@@ -63,16 +62,6 @@ def show_errors(error: ValidationError) -> None:
         field = ".".join(str(part) for part in detail["loc"])
         message = detail["msg"].removeprefix("Value error, ")
         print(f"{field}: {message}" if field else message)
-
-
-def try_bad_report(title: str, data: dict[str, Any]) -> None:
-    print("=" * 38)
-    print(f"Expected validation error ({title}):")
-    try:
-        AlienContact.model_validate(data)
-        print("No error raised: the model is too permissive!")
-    except ValidationError as error:
-        show_errors(error)
 
 
 def main() -> None:
@@ -94,31 +83,15 @@ def main() -> None:
         contact = AlienContact.model_validate(valid_data)
         print("Valid contact report:")
         display_contact(contact)
+        print()
     except ValidationError as error:
         print("Unexpected rejection:")
         show_errors(error)
 
-    try_bad_report("ID does not start with AC", {
-        "contact_id": "XX_2024_002",
-        "timestamp": "2024-07-15T09:00:00",
-        "location": "Tunguska, Siberia",
-        "contact_type": "visual",
-        "signal_strength": 3.0,
-        "duration_minutes": 15,
-        "witness_count": 2,
-    })
+    print("=" * 38)
+    print("Expected validation error:")
 
-    try_bad_report("Unverified physical contact", {
-        "contact_id": "AC_2024_003",
-        "timestamp": "2024-07-16T01:30:00",
-        "location": "Rendlesham Forest",
-        "contact_type": "physical",
-        "signal_strength": 5.0,
-        "duration_minutes": 20,
-        "witness_count": 4,
-    })
-
-    try_bad_report("Telepathic contact with 2 witnesses", {
+    invalid_data: dict[str, Any] = {
         "contact_id": "AC_2024_004",
         "timestamp": "2024-07-17T03:00:00",
         "location": "Roswell, New Mexico",
@@ -126,27 +99,13 @@ def main() -> None:
         "signal_strength": 2.0,
         "duration_minutes": 10,
         "witness_count": 2,
-    })
+    }
 
-    try_bad_report("Strong signal with no message", {
-        "contact_id": "AC_2024_005",
-        "timestamp": "2024-07-18T18:45:00",
-        "location": "Atacama Desert",
-        "contact_type": "radio",
-        "signal_strength": 9.2,
-        "duration_minutes": 60,
-        "witness_count": 3,
-    })
-
-    try_bad_report("Signal outside the 0-10 scale", {
-        "contact_id": "AC_2024_006",
-        "timestamp": "2024-07-19T12:00:00",
-        "location": "Nazca Lines",
-        "contact_type": "visual",
-        "signal_strength": 42.0,
-        "duration_minutes": 5,
-        "witness_count": 1,
-    })
+    try:
+        AlienContact.model_validate(invalid_data)
+        print("No error raised: the model is too permissive!")
+    except ValidationError as error:
+        show_errors(error)
 
 
 if __name__ == "__main__":
