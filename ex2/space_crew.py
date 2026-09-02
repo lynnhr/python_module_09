@@ -73,9 +73,7 @@ def display_mission(mission: SpaceMission) -> None:
     print(f"Mission: {mission.mission_name}")
     print(f"ID: {mission.mission_id}")
     print(f"Destination: {mission.destination}")
-    print(f"Launch date: {mission.launch_date}")
     print(f"Duration: {mission.duration_days} days")
-    print(f"Status: {mission.mission_status}")
     print(f"Budget: ${mission.budget_millions}M")
     print(f"Crew size: {len(mission.crew)}")
     print("Crew members:")
@@ -123,15 +121,6 @@ CADET: dict[str, Any] = {
     "specialization": "Life Support",
     "years_experience": 1,
 }
-INACTIVE_CAPTAIN: dict[str, Any] = {
-    "member_id": "CP005",
-    "name": "Ellen Ripley",
-    "rank": "captain",
-    "age": 41,
-    "specialization": "Xenobiology",
-    "years_experience": 15,
-    "is_active": False,
-}
 
 
 def make_mission(**changes: Any) -> dict[str, Any]:
@@ -148,63 +137,29 @@ def make_mission(**changes: Any) -> dict[str, Any]:
     return data
 
 
-def try_bad_mission(title: str, data: dict[str, Any]) -> None:
-    print("=" * 41)
-    print(f"Expected validation error ({title}):")
-    try:
-        SpaceMission.model_validate(data)
-        print("No error raised: the model is too permissive!")
-    except ValidationError as error:
-        show_errors(error)
-
-
 def main() -> None:
     print("Space Mission Crew Validation")
-    print("=" * 41)
-
-    lead = CrewMember.model_validate(COMMANDER)
-    print(f"Standalone crew member: {lead.name} ({lead.rank.value}),"
-          f" {lead.years_experience} years")
     print("=" * 41)
 
     try:
         mission = SpaceMission.model_validate(make_mission())
         print("Valid mission created:")
         display_mission(mission)
+        print()
     except ValidationError as error:
         print("Unexpected rejection:")
         show_errors(error)
 
-    try_bad_mission(
-        "ID does not start with M",
-        make_mission(mission_id="X2024_MARS"),
-    )
+    print("=" * 41)
+    print("Expected validation error:")
 
-    try_bad_mission(
-        "No Commander or Captain",
-        make_mission(crew=[OFFICER, CADET]),
-    )
+    invalid_data = make_mission(crew=[OFFICER, CADET])
 
-    try_bad_mission(
-        "Long mission with an inexperienced crew",
-        make_mission(crew=[COMMANDER, OFFICER, CADET]),
-    )
-
-    try_bad_mission(
-        "Inactive crew member",
-        make_mission(crew=[COMMANDER, INACTIVE_CAPTAIN]),
-    )
-
-    try_bad_mission(
-        "Mission over budget",
-        make_mission(budget_millions=99999.0),
-    )
-
-    child = dict(CADET, age=12)
-    try_bad_mission(
-        "Crew member too young (nested error)",
-        make_mission(crew=[COMMANDER, child]),
-    )
+    try:
+        SpaceMission.model_validate(invalid_data)
+        print("No error raised: the model is too permissive!")
+    except ValidationError as error:
+        show_errors(error)
 
 
 if __name__ == "__main__":

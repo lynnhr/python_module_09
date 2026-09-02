@@ -23,9 +23,6 @@ def display_station(station: SpaceStation) -> None:
     print(f"Power: {station.power_level}%")
     print(f"Oxygen: {station.oxygen_level}%")
     print(f"Status: {status}")
-    print(f"Last maintenance: {station.last_maintenance}")
-    if station.notes is not None:
-        print(f"Notes: {station.notes}")
 
 
 def main() -> None:
@@ -46,6 +43,7 @@ def main() -> None:
         station = SpaceStation.model_validate(valid_data)
         print("Valid station created:")
         display_station(station)
+        print()
     except ValidationError as error:
         print(f"Unexpected error: {error}")
 
@@ -66,8 +64,7 @@ def main() -> None:
         print("No error raised: the model is too permissive!")
     except ValidationError as error:
         for detail in error.errors():
-            field = ".".join(str(part) for part in detail["loc"])
-            print(f"{field}: {detail['msg']}")
+            print(detail["msg"])
 
 
 if __name__ == "__main__":
